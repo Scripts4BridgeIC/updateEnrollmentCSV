@@ -6,7 +6,7 @@ require 'json'
 require 'net/http'
 #Replace these values with the correct values for your own situation
 
-access_token = "MGMzMzY0NjQtNDM2Ni00MzFkLTliNTQtNTA1N2NkNjE4NTFiOjdjY2I3YzlhLTJjNDUtNDZkYS05OThjLWMwZDNjMjM5Zjc5Mg=="
+access_token = "put your access token here"
 
 # Your Bridge domain. Do not include https://, or, bridgeapp.com.
 bridge_domain = 'waz'
