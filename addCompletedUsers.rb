@@ -6,13 +6,13 @@ require 'json'
 require 'net/http'
 #Replace these values with the correct values for your own situation
 
-access_token = "accessTokenHere"
+access_token = "MmFjNzFmMDItYmM2ZC00YTEyLTkyMjEtMjhjYmZkYmNkOTc1OjcxYjU5M2ZhLTgyNmQtNGQ2MS1hYmUwLThkNmQwYzAxYjVjNA=="
 
 # Your Bridge domain. Do not include https://, or, bridgeapp.com.
-bridge_domain = 'waz'
+bridge_domain = 'thriveupstate'
 
 # Path to the CSV file containing the learner enrollment ID, score, and completion date.
-csv_file = '/Users/swasilewski/Desktop/Bridge/RubyScripts/thrive/testdatatruncated.csv'
+csv_file = '/Users/swasilewski/Desktop/Bridge/RubyScripts/thrive/TU4.csv'
 
 #---------------------Do not edit below this line unless you know what you're doing-------------------#
 
@@ -40,9 +40,8 @@ end
 
 base_url = "https://#{bridge_domain}.bridgeapp.com/api/author"
 
-
+puts "------------------------------------------------------------------Starting"
 CSV.foreach(csv_file, headers:true) do |row|
-
     url = URI("#{base_url}/course_templates/#{row['courseid']}/enrollments")
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = true
@@ -52,23 +51,33 @@ CSV.foreach(csv_file, headers:true) do |row|
     request["content-type"] = 'application/json'
     request["cache-control"] = 'no-cache'
     response = http.request(request)
+    unless response.code == "200"
+      puts "#{row.to_s}-----------------------------error #{response.code}"
+      next
+    end
+
     json = JSON.parse(response.body)
     request = Net::HTTP::Post.new(url)
     request["authorization"] = "Basic #{access_token}"
     request["content-type"] = 'application/json'
     request["cache-control"] = 'no-cache'
     payload = {"enrollments" => ["user_id" => row['bridgeuserid']]}
+
     request.body = payload.to_json
 
     #puts request.body
     response = http.request(request)
     #puts response.code
+    unless response.code == "204"
+      puts payload
+      puts "#{row.to_s}-----------------------------error #{response.code}"
+    end
 
 end
 
+puts "------------------------------------------------------------------halfway-ish"
 
 CSV.foreach(csv_file, headers:true) do |row|
-
     url = URI("#{base_url}/course_templates/#{row['courseid']}/enrollments")
     http = Net::HTTP.new(url.host, url.port)
     http.use_ssl = true
@@ -77,7 +86,12 @@ CSV.foreach(csv_file, headers:true) do |row|
     request["authorization"] = "Basic #{access_token}"
     request["content-type"] = 'application/json'
     request["cache-control"] = 'no-cache'
+
     response = http.request(request)
+    unless response.code == "200"
+      puts "#{row.to_s}-----------------------------error #{response.code}"
+      next
+    end
     json = JSON.parse(response.body)
 
 
@@ -90,13 +104,24 @@ CSV.foreach(csv_file, headers:true) do |row|
         request["authorization"] = "Basic #{access_token}"
         request["content-type"] = 'application/json'
         request["cache-control"] = 'no-cache'
-        payload = {"enrollments" => ["score" => row['score'], "completed_at" => row['completed']]}
+        stringDate = row['completed']
+        stringDate.slice! "+AC0"
+        stringDate.slice! "+AC0"
+        #puts stringDate
+        payload = {"enrollments" => ["completed_at" => stringDate,"score" => row['score']]}
         request.body = payload.to_json
 
         #puts request.body
+
         response = http.request(request)
         #puts response.code
+        unless response.code == "200"
+          puts payload
+          puts "#{row.to_s}-----------------------------error #{response.code}"
+        end
       end
       i+=1
     end
 end
+puts "------------------------------------------------------------------Hopefully done"
+puts "------------------------------------------------------------------check for errors"
